@@ -1,0 +1,17 @@
+{
+  "name": "uofm-parking",
+  "version": "1.0.0",
+  "description": "The Memphis Parking Survival App helps University of Memphis students and visitors find the best parking based on availability, cost, restrictions, and walking distance.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derrickajones940-source/UofM-Parking.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
