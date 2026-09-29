@@ -1,0 +1,33 @@
+# ADR-001: In-Memory Evaluation for Real-Time Parking Availability Rules
+
+* **Status:** Accepted
+* **Date:** 2026-09-29
+
+## Context
+Our application evaluates parking lot status and space availability in real time based on incoming sensor updates and historical occupancy thresholds. We needed to choose where and how to evaluate whether a parking lot is "Available," "Nearly Full," or "Full." 
+
+The evaluation logic runs frequently whenever users query the app or when occupancy counts increment. The system must maintain low latencies (<100ms response times) for mobile client queries while minimizing infrastructure operational costs during peak campus traffic hours.
+
+## The Decision
+We decided to perform parking status determination in memory within the application server using local caching and threshold evaluation, periodically syncing state back to the primary relational database asynchronously.
+
+## Alternatives Considered
+
+### Alternative 1: Direct SQL Queries & Database Triggers
+* **Description:** Compute status dynamically on every HTTP request using SQL queries against the main transactional database, or trigger state re-evaluations inside database functions.
+* **Why it was not chosen:** While this ensures strong consistency, frequent read/write spikes during peak arrival hours (8 AM – 10 AM) significantly strain database connection pools, increasing API response times beyond acceptable thresholds.
+
+### Alternative 2: Serverless Edge Functions / Distribute Cloud Workers
+* **Description:** Delegate status calculations to a serverless edge architecture (e.g., AWS Lambda or Cloudflare Workers) triggered on every status check event.
+* **Why it was not chosen:** Introduces cold-start latency jitter and requires external state synchronization (e.g., Redis). Given our small team size and budget constraints, managing serverless environment variables, cross-service auth, and cloud billing limits adds unnecessary operational overhead.
+
+## Consequences
+
+### What this decision makes easier:
+* **Sub-millisecond status checks:** In-memory status determination provides near-instant API response times.
+* **Simplified deployment:** Keeps the application architecture contained within a single cohesive deployment unit without extra serverless setup.
+
+### What this decision now makes HARDER (Trade-offs & Closed Doors):
+* **Horizontal scaling challenges:** Because state and cached occupancy thresholds reside in application memory, scaling across multiple server instances introduces potential state drift or requires explicit cache-invalidation mechanisms (e.g., Redis Pub/Sub).
+* **Risk of data loss on crash:** If an application node crashes unexpectedly before flushes occur, the most recent in-memory status logs could be lost before hitting persistent storage.
+* **Increased memory footprint:** Application instances consume a larger memory baseline to maintain state tables locally under heavy concurrent loads.
