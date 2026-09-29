@@ -30,4 +30,49 @@ Explain why each entity and relationship exists.
 
 ## Original AI Draft
 
-[Paste Copilot's response exactly as it originally gave it]
+UofM Parking Survival App — Draft Domain Model
+
+This first draft models the concepts required by the current M2 requirements.
+It does not assume accounts, authentication, maps, GPS tracking, payments, or
+how a notification is delivered.
+
+## Domain diagram
+
+```mermaid
+classDiagram
+    class User {
+        <<conceptual participant>>
+    }
+    class ParkingLot {
+        +name
+        +totalSpaces
+        +availableSpaces
+        +status
+        +availabilityUpdatedAt
+        +costAmount
+        +walkingTimeMinutes
+    }
+    class ParkingRestriction {
+        +type
+        +description
+    }
+    class ParkingReport {
+        +condition
+        +reportedAt
+    }
+    class AlertSubscription {
+        +createdAt
+    }
+    class Notification {
+        +triggeredAt
+        +triggeringStatus
+    }
+
+    ParkingLot "1" --> "0..*" ParkingRestriction : has
+    ParkingLot "1" --> "0..*" ParkingReport : receives
+    User "1" --> "0..*" ParkingReport : submits
+    User "1" --> "0..*" AlertSubscription : selects preferred lot
+    ParkingLot "1" --> "0..*" AlertSubscription : monitored by
+    AlertSubscription "1" --> "0..*" Notification : generates
+```
+
